@@ -1,3 +1,4 @@
+import ctypes
 import cv2 as cv
 import math as m
 import mouse
@@ -5,11 +6,10 @@ import numpy as np
 import pygetwindow as gw
 import sys
 from HandTracking import HandDetector
-from win32api import GetSystemMetrics
 
-
-window_width = GetSystemMetrics(0)
-window_height = GetSystemMetrics(1)
+user32 = ctypes.windll.user32
+window_width = user32.GetSystemMetrics(0)
+window_height = user32.GetSystemMetrics(1)
 
 
 detector = HandDetector(detect_conf=0.75)
