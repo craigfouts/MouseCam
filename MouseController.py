@@ -8,8 +8,8 @@ import sys
 from HandTracking import HandDetector
 
 user32 = ctypes.windll.user32
-window_width = user32.GetSystemMetrics(0)
-window_height = user32.GetSystemMetrics(1)
+window_width = user32.GetSystemMetrics(78)
+window_height = user32.GetSystemMetrics(79)
 
 
 detector = HandDetector(detect_conf=0.75)
