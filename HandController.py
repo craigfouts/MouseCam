@@ -3,8 +3,11 @@ import math as m
 import mouse
 import numpy as np
 import sys
+import warnings
 from HandTracking import HandDetector
 from Utilities import WINDOW_WIDTH_RANGE, WINDOW_HEIGHT_RANGE
+
+warnings.simplefilter('ignore')
 
 
 class MouseController:
@@ -26,7 +29,7 @@ class MouseController:
         return img, lms
 
     def get_points(self, lms, points=(5, 4, 8, 20)):
-        result = np.zeros((4, 2))
+        result = np.zeros((4, 3))
         for idx, point in enumerate(points):
             result[idx][0], result[idx][1] = lms[point][1], lms[point][2]
         return result
@@ -77,7 +80,7 @@ class MouseController:
                     proposal = 1
                 elif dists[0] > dist_thresh and dists[1] > dist_thresh and dists[2] < dist_thresh and self.tracking_mode != 2:
                     proposal = 2
-                elif dists[0] < dist_thresh and dists[1] < dist_thresh and dists[2] < dist_thresh and self.tracking_mode != 3:
+                elif dists[0] > dist_thresh and dists[1] < dist_thresh and dists[2] > dist_thresh and self.tracking_mode != 3:
                     proposal = 3
                 else:
                     proposal = self.tracking_mode
@@ -89,9 +92,12 @@ class MouseController:
                     i = 0
 
                 if i > mode_thresh:
-                    self.tracking_mode = candidate
-                    print('Mode:', self.tracking_mode)
-                    i = 0
+                    if candidate != self.tracking_mode:
+                        print('Mode:', candidate)
+                    self.tracking_mode, i = candidate, 0
+
+                if self.tracking_mode == 1:
+                    pass
 
             cv.imshow('Galaxy Rodent', img)
             self.check_quit()
@@ -99,4 +105,4 @@ class MouseController:
 
 if __name__ == '__main__':
     controller = MouseController(cam=1)
-    controller.track()
+    controller.track(mode_thresh=15)
