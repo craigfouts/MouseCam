@@ -41,7 +41,7 @@ if __name__ == '__main__':
                 mouse.move(newx, newy, absolute=True, duration=0.0)
             if length < 50 and not mouse.is_pressed('middle'):
                 mouse.press('middle')
-            elif length > 50 and mouse.is_pressed('middle'):
+            elif length > 100 and mouse.is_pressed('middle'):
                 mouse.release('middle')
             cv.line(img, (x1, y1), (x2, y2), (255, 0, 0), 3)
             cv.circle(img, (cx, cy), 15, (255, 0, 0), cv.FILLED)
