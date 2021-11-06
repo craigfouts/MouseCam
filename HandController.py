@@ -64,7 +64,7 @@ class MouseController:
                 dists = self.get_dists(lms, points, root=5)
                 position = self.get_pos(points[0])
                 if np.sum(np.abs(position - self.position)) > move_thresh:
-                    mouse.move(position[0], position[1], duration=0.0)
+                    mouse.move(position[0], position[1], duration=0.02)
                 self.position = position
 
                 if dists[2] > dist_thresh and dists[3] > dist_thresh and dists[4] > dist_thresh and self.tracking_mode != 0:
