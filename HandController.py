@@ -21,6 +21,7 @@ class MouseController:
         self.cap.set(3, cam_width)
         self.cap.set(4, cam_height)
         self.tracking_mode = 0
+        self.position = np.zeros(2)
 
     def get_snapshot(self):
         img = self.cap.read()[1]
@@ -28,15 +29,15 @@ class MouseController:
         lms = self.detector.find_landmarks(img, draw_lms=(0, 5, 4, 8, 20))
         return img, lms
 
-    def get_points(self, lms, points=(5, 4, 8, 20)):
-        result = np.zeros((4, 3))
+    def get_points(self, lms, points=(0, 5, 4, 8, 20)):
+        result = np.zeros((5, 3))
         for idx, point in enumerate(points):
             result[idx][0], result[idx][1] = lms[point][1], lms[point][2]
         return result
 
     def get_dists(self, lms, points, root=0):
         rootx, rooty = lms[root][1], lms[root][2]
-        result = np.zeros(4)
+        result = np.zeros(5)
         for idx, point in enumerate(points):
             distx = np.abs(point[0] - rootx)
             disty = np.abs(point[1] - rooty)
@@ -46,7 +47,7 @@ class MouseController:
     def get_pos(self, point, cam_range=(50, 600)):
         newx = np.interp(point[0], cam_range, WINDOW_WIDTH_RANGE)
         newy = np.interp(point[1], cam_range, WINDOW_HEIGHT_RANGE)
-        return newx, newy
+        return np.array([newx, newy])
 
     def check_quit(self, target=113, delay=10):
         key = cv.waitKey(delay)
@@ -54,51 +55,46 @@ class MouseController:
             cv.destroyAllWindows()
             sys.exit()
 
-    def track(self, dist_thresh=75, mode_thresh=25):
-        mouse_pressed = False
-        candidate, i = 0, 0
+    def track(self, move_thresh=15, dist_thresh=75, mode_thresh=25):
+        candidate, epoch = 0, 0
         while True:
             img, lms = self.get_snapshot()
             if len(lms) > 0:
                 points = self.get_points(lms)
-                dists = self.get_dists(lms, points[1:], root=5)
-                newx, newy = self.get_pos(points[0])
-                mouse.move(newx, newy)
+                dists = self.get_dists(lms, points, root=5)
+                position = self.get_pos(points[0])
+                if np.sum(np.abs(position - self.position)) > move_thresh:
+                    mouse.move(position[0], position[1], duration=0.0)
+                self.position = position
 
-                # FIXME
-                # mouse_pressed = mouse.is_pressed('left')
-                # if dists[0] < 100 and dists[2] < 100 and not mouse_pressed:
-                #     mouse.press('left')
-                # elif dists[0] > 100 and dists[2] > 100 and mouse_pressed:
-                #     mouse.release('left')
-
-                # print(i)
-
-                if dists[0] > dist_thresh and dists[1] > dist_thresh and dists[2] > dist_thresh and self.tracking_mode != 0:
+                if dists[2] > dist_thresh and dists[3] > dist_thresh and dists[4] > dist_thresh and self.tracking_mode != 0:
                     proposal = 0
-                elif dists[0] < dist_thresh and dists[1] > dist_thresh and dists[2] < dist_thresh and self.tracking_mode != 1:
+                elif dists[2] < dist_thresh and dists[3] > dist_thresh and dists[4] < dist_thresh and self.tracking_mode != 1:
                     proposal = 1
-                elif dists[0] > dist_thresh and dists[1] > dist_thresh and dists[2] < dist_thresh and self.tracking_mode != 2:
+                elif dists[2] > dist_thresh and dists[3] > dist_thresh and dists[4] < dist_thresh and self.tracking_mode != 2:
                     proposal = 2
-                elif dists[0] > dist_thresh and dists[1] < dist_thresh and dists[2] > dist_thresh and self.tracking_mode != 3:
+                elif dists[2] > dist_thresh and dists[3] < dist_thresh and dists[4] > dist_thresh and self.tracking_mode != 3:
                     proposal = 3
                 else:
                     proposal = self.tracking_mode
                 
                 if proposal == candidate:
-                    i += 1
+                    epoch += 1
                 else:
                     candidate = proposal
-                    i = 0
+                    epoch = 0
 
-                if i > mode_thresh:
+                if epoch > mode_thresh:
                     if candidate != self.tracking_mode:
                         print('Mode:', candidate)
-                    self.tracking_mode, i = candidate, 0
+                    self.tracking_mode, epoch = candidate, 0
 
+                left_pressed = mouse.is_pressed('left')
                 if self.tracking_mode == 1:
-                    pass
-
+                    if dists[3] < dist_thresh and not left_pressed:
+                        mouse.press('left')
+                    elif dists[3] > dist_thresh and left_pressed:
+                        mouse.release('left')
             cv.imshow('Galaxy Rodent', img)
             self.check_quit()
 
