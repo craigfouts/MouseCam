@@ -24,6 +24,7 @@ cap.set(4, cam_height)
 
 
 if __name__ == '__main__':
+    pressed = False
     while True:
         _, img = cap.read()
         img = detector.find_hands(img)
@@ -34,11 +35,17 @@ if __name__ == '__main__':
             x2, y2 = lms[8][1], lms[8][2]
             cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
             length = m.hypot(x2 - x1, y2 - y1)
-            if length < 100:
+            if length < 400:
                 oldx, oldy = mouse.get_position()
                 newx = np.interp(cx, (50, 600), (window_width, 0))
                 newy = np.interp(cy, (50, 600), (0, window_height))
                 mouse.move(newx, newy, absolute=True, duration=0.0)
+            if length < 100 and not pressed:
+                mouse.press('left')
+                pressed = True
+            elif length > 100:
+                mouse.release()
+                pressed = False
             cv.line(img, (x1, y1), (x2, y2), (255, 0, 0), 3)
             cv.circle(img, (cx, cy), 15, (255, 0, 0), cv.FILLED)
         cv.imshow('Image', img)
