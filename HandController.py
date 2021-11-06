@@ -93,7 +93,7 @@ class MouseController:
                     print('Mode:', self.tracking_mode)
                     i = 0
 
-            cv.imshow('View Port', img)
+            cv.imshow('Galaxy Rodent', img)
             self.check_quit()
 
 
