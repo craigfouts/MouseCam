@@ -24,7 +24,6 @@ cap.set(4, cam_height)
 
 
 if __name__ == '__main__':
-    pressed = False
     while True:
         _, img = cap.read()
         img = detector.find_hands(img)
@@ -38,14 +37,12 @@ if __name__ == '__main__':
             if length < 100:
                 oldx, oldy = mouse.get_position()
                 newx = np.interp(cx, (50, 600), (window_width + 500, 0))
-                newy = np.interp(cy, (50, 600), (window_height + 250, -1000))
+                newy = np.interp(cy, (50, 600), (250, window_height - 1000))
                 mouse.move(newx, newy, absolute=True, duration=0.0)
-            if length < 50 and not pressed:
+            if length < 50 and not mouse.is_pressed('middle'):
                 mouse.press('middle')
-                pressed = True
-            elif length > 50:
-                mouse.release()
-                pressed = False
+            elif length > 50 and mouse.is_pressed('middle'):
+                mouse.release('middle')
             cv.line(img, (x1, y1), (x2, y2), (255, 0, 0), 3)
             cv.circle(img, (cx, cy), 15, (255, 0, 0), cv.FILLED)
         cv.imshow('Image', img)
