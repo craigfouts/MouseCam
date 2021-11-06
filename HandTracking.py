@@ -21,16 +21,14 @@ class HandDetector:
                     self.mp_draw.draw_landmarks(img, hand_lms, connections)
         return img
 
-    def find_landmarks(self, img, hand_idx=0, draw=True, draw_lms=None,
-    lms_size=15, lms_color=(255, 0, 0)):
+    def find_landmarks(self, img, hand_idx=0, draw_lms=()):
         lms = []
         if self.results.multi_hand_landmarks:
             hand = self.results.multi_hand_landmarks[hand_idx]
             for id, lm in enumerate(hand.landmark):
                 h, w = img.shape[:2]
-                cx, cy = int(lm.x * w), int(lm.y * h)
-                lms.append((id, cx, cy))
-                if draw and (not draw_lms or (id == draw_lms if 
-                isinstance(draw_lms, int) else id in draw_lms)):
-                    cv2.circle(img, (cx, cy), lms_size, lms_color, cv2.FILLED)
+                x, y = int(lm.x * w), int(lm.y * h)
+                lms.append((id, x, y))
+                if id in draw_lms:
+                    cv2.circle(img, (x, y), 10, (255, 0, 0), cv2.FILLED)
         return lms

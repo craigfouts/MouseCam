@@ -36,8 +36,8 @@ if __name__ == '__main__':
             length = m.hypot(x2 - x1, y2 - y1)
             if length < 100:
                 oldx, oldy = mouse.get_position()
-                newx = np.interp(cx, (50, 600), (window_width + 500, 0))
-                newy = np.interp(cy, (50, 600), (250, window_height - 1000))
+                newx = np.interp(cx, (50, 600), (window_width + 0.01 * window_width, 0))
+                newy = np.interp(cy, (50, 600), (0 + 0.01 * window_height, window_height - 0.001 * window_height))
                 mouse.move(newx, newy, absolute=True, duration=0.0)
             if length < 50 and not mouse.is_pressed('middle'):
                 mouse.press('middle')
