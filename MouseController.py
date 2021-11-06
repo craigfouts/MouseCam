@@ -1,9 +1,15 @@
 import cv2 as cv
 import math as m
 import mouse
+import numpy as np
 import pygetwindow as gw
 import sys
 from HandTracking import HandDetector
+from win32api import GetSystemMetrics
+
+
+window_width = GetSystemMetrics(0)
+window_height = GetSystemMetrics(1)
 
 
 detector = HandDetector(detect_conf=0.75)
@@ -29,7 +35,10 @@ if __name__ == '__main__':
             cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
             length = m.hypot(x2 - x1, y2 - y1)
             if length < 100:
-                mouse.move(cx, cy, absolute=False, duration=0.1)
+                oldx, oldy = mouse.get_position()
+                newx = np.interp(cx, (50, 600), (window_width, 0))
+                newy = np.interp(cy, (50, 600), (0, window_height))
+                mouse.move(newx, newy, absolute=True, duration=0.0)
             cv.line(img, (x1, y1), (x2, y2), (255, 0, 0), 3)
             cv.circle(img, (cx, cy), 15, (255, 0, 0), cv.FILLED)
         cv.imshow('Image', img)
