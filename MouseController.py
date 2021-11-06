@@ -41,7 +41,7 @@ if __name__ == '__main__':
                 newy = np.interp(cy, (50, 600), (window_height + 250, -1000))
                 mouse.move(newx, newy, absolute=True, duration=0.0)
             if length < 50 and not pressed:
-                mouse.press('left')
+                mouse.press('middle')
                 pressed = True
             elif length > 50:
                 mouse.release()
