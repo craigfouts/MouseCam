@@ -35,15 +35,15 @@ if __name__ == '__main__':
             x2, y2 = lms[8][1], lms[8][2]
             cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
             length = m.hypot(x2 - x1, y2 - y1)
-            if length < 400:
+            if length < 100:
                 oldx, oldy = mouse.get_position()
-                newx = np.interp(cx, (50, 600), (window_width, 0))
-                newy = np.interp(cy, (50, 600), (0, window_height))
+                newx = np.interp(cx, (50, 600), (window_width + 500, 0))
+                newy = np.interp(cy, (50, 600), (window_height + 250, -1000))
                 mouse.move(newx, newy, absolute=True, duration=0.0)
-            if length < 100 and not pressed:
+            if length < 50 and not pressed:
                 mouse.press('left')
                 pressed = True
-            elif length > 100:
+            elif length > 50:
                 mouse.release()
                 pressed = False
             cv.line(img, (x1, y1), (x2, y2), (255, 0, 0), 3)
