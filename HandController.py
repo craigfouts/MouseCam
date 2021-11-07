@@ -5,7 +5,7 @@ import numpy as np
 import sys
 import warnings
 from HandTracking import HandDetector
-from Utilities import WINDOW_WIDTH_RANGE, WINDOW_HEIGHT_RANGE
+from Utilities import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH_RANGE, WINDOW_HEIGHT_RANGE
 
 warnings.simplefilter('ignore')
 
@@ -26,18 +26,18 @@ class MouseController:
     def get_snapshot(self):
         img = self.cap.read()[1]
         img = self.detector.find_hands(img)
-        lms = self.detector.find_landmarks(img, draw_lms=(0, 5, 4, 8, 20))
+        lms = self.detector.find_landmarks(img, draw_lms=(0, 5, 4, 8, 12, 20))
         return img, lms
 
-    def get_points(self, lms, points=(0, 5, 4, 8, 20)):
-        result = np.zeros((5, 3))
+    def get_points(self, lms, points=(0, 5, 4, 8, 12, 20)):
+        result = np.zeros((len(points), 3))
         for idx, point in enumerate(points):
             result[idx][0], result[idx][1] = lms[point][1], lms[point][2]
         return result
 
     def get_dists(self, lms, points, root=0):
         rootx, rooty = lms[root][1], lms[root][2]
-        result = np.zeros(5)
+        result = np.zeros(len(points))
         for idx, point in enumerate(points):
             distx = np.abs(point[0] - rootx)
             disty = np.abs(point[1] - rooty)
@@ -56,6 +56,8 @@ class MouseController:
             sys.exit()
 
     def track(self, move_thresh=15, dist_thresh=75, mode_thresh=25):
+        right_pressed = False
+        scrolling = False
         candidate, epoch = 0, 0
         while True:
             img, lms = self.get_snapshot()
@@ -67,13 +69,13 @@ class MouseController:
                     mouse.move(position[0], position[1], duration=0.02)
                 self.position = position
 
-                if dists[2] > dist_thresh and dists[3] > dist_thresh and dists[4] > dist_thresh and self.tracking_mode != 0:
+                if dists[2] > dist_thresh and dists[3] > dist_thresh and dists[4] > dist_thresh and dists[5] > dist_thresh and self.tracking_mode != 0:
                     proposal = 0
-                elif dists[2] < dist_thresh and dists[3] > dist_thresh and dists[4] < dist_thresh and self.tracking_mode != 1:
+                elif dists[2] < dist_thresh and dists[3] > dist_thresh and dists[4] < dist_thresh and dists[5] < dist_thresh and self.tracking_mode != 1:
                     proposal = 1
-                elif dists[2] > dist_thresh and dists[3] > dist_thresh and dists[4] < dist_thresh and self.tracking_mode != 2:
+                elif dists[2] > dist_thresh and dists[3] > dist_thresh and dists[4] > dist_thresh and dists[5] < dist_thresh and self.tracking_mode != 2:
                     proposal = 2
-                elif dists[2] > dist_thresh and dists[3] < dist_thresh and dists[4] > dist_thresh and self.tracking_mode != 3:
+                elif dists[2] > dist_thresh and dists[3] < dist_thresh and dists[4] < dist_thresh and dists[5] > dist_thresh and self.tracking_mode != 3:
                     proposal = 3
                 else:
                     proposal = self.tracking_mode
@@ -90,11 +92,23 @@ class MouseController:
                     self.tracking_mode, epoch = candidate, 0
 
                 left_pressed = mouse.is_pressed('left')
-                if self.tracking_mode == 1:
-                    if dists[3] < dist_thresh and not left_pressed:
+                if self.tracking_mode == 2:
+                    if dists[3] < dist_thresh and dists[4] < dist_thresh and not left_pressed:
                         mouse.press('left')
-                    elif dists[3] > dist_thresh and left_pressed:
-                        mouse.release('left')
+                    elif dists[3] > dist_thresh and dists[4] < dist_thresh and not right_pressed:
+                        mouse.click('right')
+                        right_pressed = True
+                    elif dists[2] < dist_thresh and not scrolling:
+                        if position[1] > WINDOW_HEIGHT / 2.0 + 50:
+                            mouse.wheel(-1)
+                        elif position[1] < WINDOW_HEIGHT / 2.0 - 50:
+                            mouse.wheel(1)
+                    elif dists[3] > dist_thresh and dists[4] > dist_thresh and left_pressed:
+                        if left_pressed:
+                            mouse.release('left')
+                        if right_pressed:
+                            right_pressed = False
+                        
             cv.imshow('Galaxy Rodent', img)
             self.check_quit()
 
